@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notas Bariátricas — Live</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101318;
+      --panel: #181c23;
+      --panel-alt: #1f2430;
+      --accent: #5ac8fa;
+      --accent-soft: rgba(90, 200, 250, 0.12);
+      --danger: #ff6b6b;
+      --success: #2ecc71;
+      --text: #f5f7fa;
+      --muted: #a0a6b1;
+      --border: rgba(255, 255, 255, 0.08);
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(90, 200, 250, 0.08), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.04), transparent 50%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: clamp(16px, 4vw, 48px);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin: 0 0 12px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    button {
+      font: inherit;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 60%), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(16px, 3vw, 24px);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      background: rgba(90, 200, 250, 0.15);
+      color: var(--accent);
+    }
+
+    .status-pill[data-state="idle"] {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+    }
+
+    .status-pill[data-state="listening"] {
+      background: rgba(90, 200, 250, 0.2);
+      color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(90, 200, 250, 0.08);
+    }
+
+    .status-pill[data-state="error"] {
+      background: rgba(255, 107, 107, 0.2);
+      color: var(--danger);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .controls button {
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(90, 200, 250, 0.18);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .controls button.secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+    }
+
+    .controls button.danger {
+      background: rgba(255, 107, 107, 0.18);
+      color: var(--danger);
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(90, 200, 250, 0.15);
+    }
+
+    .controls button.secondary:hover {
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .controls button.danger:hover {
+      box-shadow: 0 8px 18px rgba(255, 107, 107, 0.25);
+    }
+
+    .grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .grid.two-col {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+      color: var(--text);
+      font: inherit;
+      resize: vertical;
+    }
+
+    textarea.small {
+      min-height: 60px;
+    }
+
+    textarea.medium {
+      min-height: 100px;
+    }
+
+    textarea.large {
+      min-height: 160px;
+    }
+
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chip[data-state="active"] {
+      background: rgba(90, 200, 250, 0.18);
+      color: var(--accent);
+    }
+
+    .toggle-group {
+      display: grid;
+      gap: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+    }
+
+    .toggle strong {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .toggle button {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toggle button[data-value="yes"][data-active="true"],
+    .toggle button[data-value="no"][data-active="true"] {
+      background: rgba(90, 200, 250, 0.18);
+      color: var(--accent);
+    }
+
+    .toggle button[data-value="no"][data-active="true"] {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+    }
+
+    .toggle button:hover {
+      transform: translateY(-1px);
+    }
+
+    .metrics {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .metric-card {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+      display: grid;
+      gap: 6px;
+    }
+
+    .metric-card .value {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .metric-card .hint {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .alert {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .log {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+      padding: 12px;
+      max-height: 240px;
+      overflow-y: auto;
+      display: grid;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .log-entry {
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .log-entry time {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .json-output {
+      background: var(--panel-alt);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 200px;
+    }
+
+    .interim {
+      font-size: 14px;
+      color: var(--muted);
+      min-height: 20px;
+    }
+
+    .hint-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .actions button.primary {
+      background: var(--accent);
+      color: #0b1621;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+      }
+      .controls {
+        width: 100%;
+      }
+      .controls button {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app panel">
+    <header class="panel-header">
+      <div>
+        <h1>Notas Bariátricas — Live</h1>
+        <p>Escucha en tiempo real y consolida antecedentes clínicos estructurados.</p>
+        <div class="hint-row">
+          <span class="badge">Ctrl / Cmd + E · Iniciar / detener</span>
+          <span class="badge">Ctrl / Cmd + J · Copiar JSON</span>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="status-pill" data-state="idle" id="status-pill">⚪ Listo</div>
+        <button id="toggle-recording">▶️ Escuchar</button>
+        <button class="secondary" id="copy-json">📋 Copiar JSON</button>
+        <button class="secondary" id="download-json">⬇️ Descargar JSON</button>
+        <button class="danger" id="reset-form">⟲ Reiniciar</button>
+      </div>
+    </header>
+
+    <section class="panel" style="background: transparent; box-shadow: none; border: none; padding: 0">
+      <div class="grid two-col">
+        <div>
+          <h2>Identificación</h2>
+          <div class="grid">
+            <div>
+              <label for="patient-name">Nombre</label>
+              <input id="patient-name" type="text" placeholder="Nombre completo" />
+            </div>
+            <div>
+              <label for="patient-id">RUN / DNI</label>
+              <input id="patient-id" type="text" placeholder="14.548.858-3" />
+            </div>
+            <div>
+              <label for="patient-age">Edad</label>
+              <input id="patient-age" type="text" placeholder="47 años" />
+            </div>
+            <div>
+              <label for="patient-birth">Fecha de nacimiento</label>
+              <input id="patient-birth" type="text" placeholder="24/01/1978" />
+            </div>
+            <div>
+              <label for="note-date">Fecha de registro</label>
+              <input id="note-date" type="date" />
+            </div>
+            <div>
+              <label for="note-source">Fuente del registro</label>
+              <select id="note-source">
+                <option value="audio" selected>Audio</option>
+                <option value="videollamada">Videollamada</option>
+                <option value="presencial">Presencial</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2>Datos antropométricos</h2>
+          <div class="metrics">
+            <div class="metric-card">
+              <label for="weight">Peso (kg)</label>
+              <input id="weight" type="number" step="0.1" min="0" placeholder="87" />
+              <span class="hint">Ej.: "peso 87 kilos"</span>
+            </div>
+            <div class="metric-card">
+              <label for="height">Estatura (m)</label>
+              <input id="height" type="number" step="0.01" min="0" placeholder="1.48" />
+              <span class="hint">"mide uno coma cuarenta y ocho"</span>
+            </div>
+            <div class="metric-card">
+              <label for="bmi">IMC</label>
+              <input id="bmi" type="number" step="0.01" min="0" placeholder="39.7" readonly />
+              <span class="hint" id="bmi-range">Sin calcular</span>
+            </div>
+          </div>
+          <div class="alert">El IMC se calcula automáticamente cuando peso y estatura están disponibles.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Antecedentes y condiciones</h2>
+      <div class="grid two-col">
+        <div class="toggle-group" id="condition-toggles">
+          <div class="toggle" data-field="reflujo">
+            <strong>Reflujo gastroesofágico sintomático</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="medicacion">
+            <strong>Medicación actual consignada</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="tabaco">
+            <strong>Consumo de tabaco</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="vapeo">
+            <strong>Uso de vapeo</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="cirugias">
+            <strong>Cirugías previas consignadas</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="eda">
+            <strong>EDA previa</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="biopsia">
+            <strong>Requiere revisar biopsia</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="cancer">
+            <strong>Cáncer gástrico familiar 1er grado</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="alergias">
+            <strong>Alergia a fármacos</strong>
+            <div>
+              <button type="button" data-value="no" data-active="true">No</button>
+              <button type="button" data-value="yes">Sí</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="medications">Detalle medicación</label>
+            <textarea id="medications" class="medium" placeholder="Enalapril · HCTZ · Eutirox · Metformina"></textarea>
+          </div>
+          <div>
+            <label for="surgeries">Historial de cirugías</label>
+            <textarea id="surgeries" class="medium" placeholder="COLE LAPARO — CESÁREA x2"></textarea>
+          </div>
+          <div>
+            <label for="comorbidities">Comorbilidades / diagnósticos</label>
+            <textarea
+              id="comorbidities"
+              class="medium"
+              placeholder="IMC 39.7 · HTA · IR · Hipotiroidismo"
+            ></textarea>
+          </div>
+          <div>
+            <label for="allergy-notes">Detalle alergias</label>
+            <textarea id="allergy-notes" class="small" placeholder="Sin alergias"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Plan</h2>
+      <div class="grid two-col">
+        <div class="toggle-group">
+          <div class="toggle" data-field="abandono-tabaco">
+            <strong>Mantener abandono tabaco</strong>
+            <div>
+              <button type="button" data-value="mantener" data-active="true">Mantener</button>
+              <button type="button" data-value="no-indicado">No indicado</button>
+            </div>
+          </div>
+          <div class="toggle" data-field="cirugia-propuesta">
+            <strong>Procedimiento propuesto</strong>
+            <div>
+              <button type="button" data-value="bypass" data-active="true">Bypass</button>
+              <button type="button" data-value="manga" data-active="true">Manga</button>
+              <button type="button" data-value="evaluar">Evaluar</button>
+            </div>
+          </div>
+        </div>
+        <div class="grid">
+          <div>
+            <label for="plan-notes">Indicaciones / Observaciones plan</label>
+            <textarea id="plan-notes" class="medium" placeholder="Decidir con exámenes · No tiene preferencias"></textarea>
+          </div>
+          <div>
+            <label for="next-steps">Próximos pasos</label>
+            <textarea id="next-steps" class="small" placeholder="Solicitar laboratorio, exámenes preoperatorios"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Observaciones cronometradas</h2>
+      <div class="interim" id="interim-text"></div>
+      <div class="log" id="transcript-log"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Salida estructurada</h2>
+      <div class="actions">
+        <button class="primary" id="refresh-json">Actualizar JSON</button>
+        <button class="secondary" id="copy-json-2">Copiar</button>
+      </div>
+      <pre class="json-output" id="json-output">{}</pre>
+    </section>
+  </div>
+
+  <script>
+    const dom = {
+      statusPill: document.getElementById("status-pill"),
+      toggleRecording: document.getElementById("toggle-recording"),
+      interim: document.getElementById("interim-text"),
+      log: document.getElementById("transcript-log"),
+      weight: document.getElementById("weight"),
+      height: document.getElementById("height"),
+      bmi: document.getElementById("bmi"),
+      bmiRange: document.getElementById("bmi-range"),
+      medications: document.getElementById("medications"),
+      surgeries: document.getElementById("surgeries"),
+      comorbidities: document.getElementById("comorbidities"),
+      allergyNotes: document.getElementById("allergy-notes"),
+      planNotes: document.getElementById("plan-notes"),
+      nextSteps: document.getElementById("next-steps"),
+      toggleGroups: document.querySelectorAll(".toggle"),
+      jsonOutput: document.getElementById("json-output"),
+      noteDate: document.getElementById("note-date"),
+      patientName: document.getElementById("patient-name"),
+      patientId: document.getElementById("patient-id"),
+      patientAge: document.getElementById("patient-age"),
+      patientBirth: document.getElementById("patient-birth"),
+      noteSource: document.getElementById("note-source"),
+    };
+
+    const state = {
+      listening: false,
+      recognition: null,
+      observations: [],
+      procedureSet: new Set(["bypass", "manga"]),
+      planAbandono: "mantener",
+    };
+
+    const negativeWords = ["no", "nunca", "ninguno", "ninguna", "sin", "tampoco", "jamás", "jamaz"];
+    const decimalWords = ["coma", "punto", "con"];
+
+    const accentMap = {
+      á: "a",
+      é: "e",
+      í: "i",
+      ó: "o",
+      ú: "u",
+      ü: "u",
+      ñ: "n",
+    };
+
+    const medicineKeywords = [
+      "enalapril",
+      "hctz",
+      "hidroclorotiazida",
+      "eutirox",
+      "levotiroxina",
+      "metformina",
+      "metformin",
+      "glifage",
+      "insulina",
+      "omeprazol",
+      "furosemida",
+      "losartan",
+    ];
+
+    const surgeryKeywords = [
+      "cole",
+      "colecistectomia",
+      "laparo",
+      "laparoscop",
+      "cesarea",
+      "histerect",
+      "bypass",
+      "manga",
+      "tiroid",
+      "hernia",
+    ];
+
+    const comorbidityKeywords = [
+      { key: "HTA", synonyms: ["hta", "hipertension", "hipertensa", "presion alta"] },
+      { key: "IR", synonyms: ["resistencia a la insulina", "resistencia a insulin", "ir"] },
+      { key: "Hipotiroidismo", synonyms: ["hipotiroidismo", "tiroides", "tiroidea", "eutirox"] },
+      { key: "DM2", synonyms: ["diabetes", "dm dos", "mellitus"] },
+      { key: "Dislipidemia", synonyms: ["dislipidemia", "colesterol", "trigliceridos"] },
+    ];
+
+    function normalize(text) {
+      return text
+        .toLowerCase()
+        .replace(/[áéíóúüñ]/g, (char) => accentMap[char] || char)
+        .replace(/[\s]+/g, " ")
+        .trim();
+    }
+
+    function updateStatus(text, stateName) {
+      dom.statusPill.textContent = text;
+      if (stateName) {
+        dom.statusPill.dataset.state = stateName;
+      }
+    }
+
+    function ensureRecognition() {
+      if (state.recognition || typeof window === "undefined") return state.recognition;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        updateStatus("⛔ No disponible", "error");
+        dom.toggleRecording.disabled = true;
+        return null;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = "es-CL";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.addEventListener("result", handleRecognitionResult);
+      recognition.addEventListener("start", () => updateStatus("🔴 Escuchando", "listening"));
+      recognition.addEventListener("error", (event) => {
+        updateStatus(`⚠️ Error: ${event.error}`, "error");
+      });
+      recognition.addEventListener("end", () => {
+        if (state.listening) {
+          recognition.start();
+        } else {
+          updateStatus("⚪ Listo", "idle");
+        }
+      });
+      state.recognition = recognition;
+      return recognition;
+    }
+
+    function toggleListening(force) {
+      const recognition = ensureRecognition();
+      if (!recognition) return;
+      const targetState = typeof force === "boolean" ? force : !state.listening;
+      if (targetState && !state.listening) {
+        recognition.start();
+      } else if (!targetState && state.listening) {
+        recognition.stop();
+      }
+      state.listening = targetState;
+      dom.toggleRecording.textContent = state.listening ? "⏹️ Detener" : "▶️ Escuchar";
+    }
+
+    function handleRecognitionResult(event) {
+      let interimAggregate = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0].transcript.trim();
+        if (!transcript) continue;
+        if (result.isFinal) {
+          dom.interim.textContent = "";
+          pushObservation(transcript);
+          processTranscript(transcript);
+        } else {
+          interimAggregate += transcript + " ";
+        }
+      }
+      dom.interim.textContent = interimAggregate.trim();
+    }
+
+    function pushObservation(text) {
+      const now = new Date();
+      const timestamp = now.toTimeString().slice(0, 8);
+      state.observations.push({ timestamp, text });
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      const timeEl = document.createElement("time");
+      timeEl.textContent = timestamp;
+      const textEl = document.createElement("div");
+      textEl.textContent = text;
+      entry.appendChild(timeEl);
+      entry.appendChild(textEl);
+      dom.log.prepend(entry);
+      updateJSON();
+    }
+
+    function processTranscript(raw) {
+      const transcript = normalize(raw);
+      maybeUpdatePatient(transcript, raw);
+      maybeUpdateWeight(transcript, raw);
+      maybeUpdateHeight(transcript, raw);
+      maybeUpdateBMI(transcript);
+      maybeUpdateBoolean("reflujo", transcript, ["reflujo", "acidez"]);
+      maybeUpdateBoolean("tabaco", transcript, ["fuma", "fumador", "fumadora", "tabaco", "cigarrillo"]);
+      maybeUpdateBoolean("vapeo", transcript, ["vape", "vaporizador", "vaper", "vapeo"]);
+      maybeUpdateBoolean("medicacion", transcript, ["medicacion", "medicamentos", "tratamiento", "toma", "pastilla"]);
+      maybeUpdateBoolean("cirugias", transcript, ["cirugia", "operacion", "operada", "operado", "cirugias"]);
+      maybeUpdateBoolean("eda", transcript, ["eda", "endoscopia", "endoscopia digestiva"]);
+      maybeUpdateBoolean("biopsia", transcript, ["biopsia"]);
+      maybeUpdateBoolean("cancer", transcript, ["cancer gastrico", "familia", "familiar", "mama", "papa", "herman"]);
+      maybeUpdateBoolean("alergias", transcript, ["alergia", "alergias", "reaccion"]);
+      maybeUpdatePlan(transcript);
+      maybeUpdateMedications(transcript, raw);
+      maybeUpdateSurgeries(transcript, raw);
+      maybeUpdateComorbidities(transcript, raw);
+      updateJSON();
+    }
+
+    function maybeUpdatePatient(transcript, raw) {
+      if (transcript.includes("luisa")) {
+        if (!dom.patientName.value) dom.patientName.value = "Luisa Jeannette Peña Rubilar";
+      }
+      if (/(run|dni|rut)/.test(transcript) && raw.match(/\d{2}\.\d{3}\.\d{3}-\d/)) {
+        dom.patientId.value = raw.match(/\d{2}\.\d{3}\.\d{3}-\d/)[0];
+      }
+      if (/fecha de nacimiento/.test(transcript)) {
+        const dateMatch = raw.match(/\d{2}\/\d{2}\/\d{4}/);
+        if (dateMatch) dom.patientBirth.value = dateMatch[0];
+      }
+    }
+
+    function maybeUpdateWeight(transcript, raw) {
+      if (!/(peso|pes[aao]|kil[oi]|kg)/.test(transcript)) return;
+      const value = extractNumber(raw);
+      if (isFinite(value) && value >= 20 && value <= 400) {
+        dom.weight.value = value.toFixed(1).replace(/\.0$/, "");
+        calculateBMI();
+      }
+    }
+
+    function maybeUpdateHeight(transcript, raw) {
+      if (!/(estatura|mide|altura|metro|centimetro|altura de)/.test(transcript)) return;
+      const value = extractNumber(raw);
+      if (!isFinite(value)) return;
+      let meters = value;
+      if (meters > 10) {
+        meters = meters / 100;
+      }
+      if (meters >= 0.9 && meters <= 2.3) {
+        dom.height.value = meters.toFixed(2);
+        calculateBMI();
+      }
+    }
+
+    function maybeUpdateBMI(transcript) {
+      if (!/(imc|indice de masa)/.test(transcript)) return;
+      const value = extractNumber(transcript);
+      if (isFinite(value) && value >= 10 && value <= 80) {
+        dom.bmi.value = value.toFixed(1);
+        updateBmiRange(value);
+      }
+    }
+
+    function maybeUpdateBoolean(field, transcript, keywords) {
+      if (!keywords.some((keyword) => transcript.includes(keyword))) return;
+      const negativeDetected = negativeWords.some((neg) =>
+        new RegExp(`(?:^|\s)${neg}\s+(?:[a-z]+\s+){0,2}(?:${keywords.join("|")})`).test(transcript) ||
+        new RegExp(`(?:${keywords.join("|")})(?:\s+[a-z]+){0,2}\s+${neg}(?:$|\s)`).test(transcript)
+      );
+      const positiveDetected = /(si|sí|presenta|con|activa|activo)/.test(transcript) &&
+        keywords.some((keyword) => new RegExp(`(?:${keyword})(?:\s+[a-z]+){0,3}`).test(transcript));
+
+      if (negativeDetected) {
+        setToggleValue(field, false);
+      } else if (positiveDetected) {
+        setToggleValue(field, true);
+      }
+    }
+
+    function maybeUpdatePlan(transcript) {
+      if (/(mantener|abandono).*(tabaco|fumar)/.test(transcript)) {
+        state.planAbandono = "mantener";
+        setPlanOption("mantener");
+      }
+      if (/(no\s+indicado|no\s+aplica)/.test(transcript)) {
+        state.planAbandono = "no-indicado";
+        setPlanOption("no-indicado");
+      }
+
+      if (/bypass/.test(transcript)) {
+        state.procedureSet.add("bypass");
+      }
+      if (/manga/.test(transcript)) {
+        state.procedureSet.add("manga");
+      }
+      if (/(sin|no)\s+(preferencia|preferencias|preferir)/.test(transcript)) {
+        appendUniqueLine(dom.planNotes, "No tiene preferencias");
+      }
+      if (/(decidir|definir|resolver).*(examen)/.test(transcript)) {
+        appendUniqueLine(dom.planNotes, "Decidir con exámenes");
+      }
+      renderProcedureToggle();
+    }
+
+    function maybeUpdateMedications(transcript, raw) {
+      if (!/(medic|toma|tratamiento|pastilla|comprimido)/.test(transcript) &&
+          !medicineKeywords.some((med) => transcript.includes(normalize(med)))) {
+        return;
+      }
+      setToggleValue("medicacion", true);
+      const found = new Set();
+      for (const med of medicineKeywords) {
+        if (transcript.includes(normalize(med))) {
+          found.add(med.toUpperCase());
+        }
+      }
+      raw
+        .split(/[.,;:]/)
+        .map((segment) => segment.trim())
+        .filter(Boolean)
+        .forEach((segment) => {
+          medicineKeywords.forEach((med) => {
+            if (segment.toLowerCase().includes(med)) {
+              found.add(med.toUpperCase());
+            }
+          });
+        });
+      if (found.size) {
+        appendUniqueLine(dom.medications, Array.from(found).join(" · "));
+      }
+    }
+
+    function maybeUpdateSurgeries(transcript, raw) {
+      if (!/(cirug|operaci|operada|operado|laparo|cole|cesar)/.test(transcript)) return;
+      setToggleValue("cirugias", true);
+      const matches = [];
+      raw
+        .split(/[.,;]/)
+        .map((segment) => segment.trim())
+        .filter(Boolean)
+        .forEach((segment) => {
+          if (/(cirug|operaci|cole|laparo|cesar)/i.test(segment)) {
+            matches.push(segment);
+          }
+        });
+      if (!matches.length) {
+        matches.push(raw.trim());
+      }
+      matches.forEach((match) => appendUniqueLine(dom.surgeries, match));
+    }
+
+    function maybeUpdateComorbidities(transcript, raw) {
+      const found = [];
+      for (const item of comorbidityKeywords) {
+        if (item.synonyms.some((syn) => transcript.includes(normalize(syn)))) {
+          found.push(item.key);
+        }
+      }
+      if (found.length) {
+        found.forEach((entry) => appendUniqueLine(dom.comorbidities, entry));
+      }
+      if (/imc/.test(transcript)) {
+        const value = extractNumber(transcript);
+        if (value && isFinite(value)) {
+          appendUniqueLine(dom.comorbidities, `IMC ${value.toFixed ? value.toFixed(1) : value}`);
+        }
+      }
+      if (/hipotiroid/.test(transcript)) {
+        appendUniqueLine(dom.comorbidities, "Hipotiroidismo");
+      }
+      if (/hta|hipertension/.test(transcript)) {
+        appendUniqueLine(dom.comorbidities, "HTA");
+      }
+      if (/(resistencia|insulina)/.test(transcript)) {
+        appendUniqueLine(dom.comorbidities, "IR");
+      }
+    }
+
+    function setToggleValue(field, value) {
+      const toggle = document.querySelector(`.toggle[data-field="${field}"]`);
+      if (!toggle) return;
+      const yesButton = toggle.querySelector('[data-value="yes"]');
+      const noButton = toggle.querySelector('[data-value="no"]');
+      if (value === true) {
+        yesButton.dataset.active = "true";
+        noButton.dataset.active = "false";
+      } else if (value === false) {
+        noButton.dataset.active = "true";
+        yesButton.dataset.active = "false";
+      }
+    }
+
+    function setPlanOption(value) {
+      const toggle = document.querySelector('.toggle[data-field="abandono-tabaco"]');
+      if (!toggle) return;
+      toggle.querySelectorAll("button").forEach((btn) => {
+        btn.dataset.active = btn.dataset.value === value ? "true" : "false";
+      });
+    }
+
+    function renderProcedureToggle() {
+      const toggle = document.querySelector('.toggle[data-field="cirugia-propuesta"]');
+      if (!toggle) return;
+      toggle.querySelectorAll("button").forEach((btn) => {
+        if (btn.dataset.value === "evaluar") {
+          btn.dataset.active = state.procedureSet.size ? "false" : "true";
+        } else {
+          btn.dataset.active = state.procedureSet.has(btn.dataset.value) ? "true" : "false";
+        }
+      });
+    }
+
+    function appendUniqueLine(textarea, text) {
+      const current = textarea.value
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (!current.includes(text)) {
+        current.push(text);
+        textarea.value = current.join("\n");
+      }
+    }
+
+    function calculateBMI() {
+      const weight = parseFloat(dom.weight.value.replace(",", "."));
+      const height = parseFloat(dom.height.value.replace(",", "."));
+      if (!weight || !height) return;
+      const bmi = weight / (height * height);
+      dom.bmi.value = bmi.toFixed(2);
+      updateBmiRange(bmi);
+    }
+
+    function updateBmiRange(value) {
+      if (!value) {
+        dom.bmiRange.textContent = "Sin calcular";
+        return;
+      }
+      let category = "";
+      if (value < 18.5) category = "Bajo peso";
+      else if (value < 25) category = "Normal";
+      else if (value < 30) category = "Sobrepeso";
+      else if (value < 35) category = "Obesidad I";
+      else if (value < 40) category = "Obesidad II";
+      else category = "Obesidad III";
+      dom.bmiRange.textContent = `${category}`;
+    }
+
+    function extractNumber(text) {
+      const directMatch = text.match(/\d+[\.,]?\d*/);
+      if (directMatch) {
+        return parseFloat(directMatch[0].replace(",", "."));
+      }
+      return parseSpanishNumber(text);
+    }
+
+    function parseSpanishNumber(text) {
+      const sanitized = normalize(text).replace(/[^a-z0-9\s.,]/g, " ");
+      const numericMatch = sanitized.match(/\d+[\.,]?\d*/);
+      if (numericMatch) {
+        return parseFloat(numericMatch[0].replace(",", "."));
+      }
+      const tokens = sanitized.split(/\s+/).filter(Boolean);
+      if (!tokens.length) return NaN;
+      const wordsToSkip = new Set(["y", "kilos", "kilogramos", "metros", "centimetros", "centimetro", "metro", "kilo"]);
+      const singleMap = {
+        cero: 0,
+        un: 1,
+        uno: 1,
+        una: 1,
+        dos: 2,
+        tres: 3,
+        cuatro: 4,
+        cinco: 5,
+        seis: 6,
+        siete: 7,
+        ocho: 8,
+        nueve: 9,
+        diez: 10,
+        once: 11,
+        doce: 12,
+        trece: 13,
+        catorce: 14,
+        quince: 15,
+        dieciseis: 16,
+        diecisiete: 17,
+        dieciocho: 18,
+        diecinueve: 19,
+        veinte: 20,
+        veintiuno: 21,
+        veintidos: 22,
+        veintitres: 23,
+        veinticuatro: 24,
+        veinticinco: 25,
+        veintiseis: 26,
+        veintisiete: 27,
+        veintiocho: 28,
+        veintinueve: 29,
+        treinta: 30,
+        cuarenta: 40,
+        cincuenta: 50,
+        sesenta: 60,
+        setenta: 70,
+        ochenta: 80,
+        noventa: 90,
+        cien: 100,
+        ciento: 100,
+        doscientos: 200,
+        trescientos: 300,
+        cuatrocientos: 400,
+        quinientos: 500,
+        seiscientos: 600,
+        setecientos: 700,
+        ochocientos: 800,
+        novecientos: 900,
+        mil: 1000,
+      };
+
+      let total = 0;
+      let current = 0;
+      let decimalTokens = null;
+
+      for (const token of tokens) {
+        if (wordsToSkip.has(token)) continue;
+        if (decimalWords.includes(token)) {
+          decimalTokens = [];
+          continue;
+        }
+        if (decimalTokens) {
+          if (singleMap[token] !== undefined) {
+            decimalTokens.push(singleMap[token]);
+          }
+          continue;
+        }
+        if (singleMap[token] !== undefined) {
+          const value = singleMap[token];
+          if (value === 1000) {
+            total += (current || 1) * value;
+            current = 0;
+          } else if (value >= 100) {
+            current += value;
+          } else {
+            current += value;
+          }
+          continue;
+        }
+      }
+      let number = total + current;
+      if (decimalTokens && decimalTokens.length) {
+        const decimalString = decimalTokens.join("");
+        number += parseFloat(`0.${decimalString}`);
+      }
+      return number || NaN;
+    }
+
+    function buildJson() {
+      const planProcedures = Array.from(state.procedureSet);
+      if (!planProcedures.length) planProcedures.push("evaluar");
+      return {
+        paciente: dom.patientName.value.trim(),
+        run_dni: dom.patientId.value.trim(),
+        edad: dom.patientAge.value.trim(),
+        fecha_nacimiento: dom.patientBirth.value.trim(),
+        fecha: dom.noteDate.value || new Date().toISOString().slice(0, 10),
+        fuente: dom.noteSource.value || "audio",
+        datos: {
+          peso_kg: dom.weight.value ? Number(dom.weight.value.replace(",", ".")) : null,
+          estatura_m: dom.height.value ? Number(dom.height.value.replace(",", ".")) : null,
+          imc: dom.bmi.value ? Number(dom.bmi.value) : null,
+        },
+        antecedentes: {
+          reflujo_sintomatico: isToggleYes("reflujo"),
+          medicacion_actual: isToggleYes("medicacion"),
+          tabaquismo: isToggleYes("tabaco"),
+          vapeo: isToggleYes("vapeo"),
+          cirugias_previas: dom.surgeries.value
+            .split(/\n+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+          eda_previa: isToggleYes("eda"),
+          requiere_revisar_biopsia: isToggleYes("biopsia"),
+          cancer_gastrico_familiar_primer_grado: isToggleYes("cancer"),
+          alergias_farmacos: isToggleYes("alergias"),
+          detalle_alergias: dom.allergyNotes.value.trim(),
+          medicacion_detalle: dom.medications.value
+            .split(/\n+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+          comorbilidades: dom.comorbidities.value
+            .split(/\n+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+        },
+        plan: {
+          abandono_tabaco: state.planAbandono,
+          procedimiento_propuesto: planProcedures,
+          indicaciones: dom.planNotes.value
+            .split(/\n+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+          proximos_pasos: dom.nextSteps.value
+            .split(/\n+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+        },
+        observaciones: state.observations.slice().reverse(),
+      };
+    }
+
+    function isToggleYes(field) {
+      const toggle = document.querySelector(`.toggle[data-field="${field}"]`);
+      if (!toggle) return false;
+      const yes = toggle.querySelector('[data-value="yes"]');
+      return yes && yes.dataset.active === "true";
+    }
+
+    function updateJSON() {
+      dom.jsonOutput.textContent = JSON.stringify(buildJson(), null, 2);
+    }
+
+    dom.toggleRecording.addEventListener("click", () => toggleListening());
+    document.getElementById("copy-json").addEventListener("click", copyJson);
+    document.getElementById("copy-json-2").addEventListener("click", copyJson);
+    document.getElementById("download-json").addEventListener("click", downloadJson);
+    document.getElementById("refresh-json").addEventListener("click", updateJSON);
+    document.getElementById("reset-form").addEventListener("click", resetForm);
+
+    dom.toggleGroups.forEach((toggle) => {
+      toggle.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const value = btn.dataset.value;
+          if (toggle.dataset.field === "cirugia-propuesta") {
+            if (value === "evaluar") {
+              state.procedureSet.clear();
+            } else {
+              if (state.procedureSet.has(value)) {
+                state.procedureSet.delete(value);
+              } else {
+                state.procedureSet.add(value);
+              }
+            }
+            renderProcedureToggle();
+            updateJSON();
+            return;
+          }
+          if (toggle.dataset.field === "abandono-tabaco") {
+            state.planAbandono = value;
+            setPlanOption(value);
+            updateJSON();
+            return;
+          }
+          toggle.querySelectorAll("button").forEach((button) => {
+            button.dataset.active = button === btn ? "true" : "false";
+          });
+          updateJSON();
+        });
+      });
+    });
+
+    [dom.weight, dom.height].forEach((input) => {
+      input.addEventListener("input", calculateBMI);
+      input.addEventListener("change", updateJSON);
+    });
+
+    [
+      dom.bmi,
+      dom.medications,
+      dom.surgeries,
+      dom.comorbidities,
+      dom.allergyNotes,
+      dom.planNotes,
+      dom.nextSteps,
+      dom.patientName,
+      dom.patientId,
+      dom.patientAge,
+      dom.patientBirth,
+      dom.noteDate,
+      dom.noteSource,
+    ].forEach((input) => input.addEventListener("input", updateJSON));
+
+    function copyJson() {
+      navigator.clipboard.writeText(dom.jsonOutput.textContent).then(() => {
+        updateStatus("📋 JSON copiado", "idle");
+        setTimeout(() => updateStatus(state.listening ? "🔴 Escuchando" : "⚪ Listo", state.listening ? "listening" : "idle"), 2000);
+      });
+    }
+
+    function downloadJson() {
+      const blob = new Blob([dom.jsonOutput.textContent], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const filename = dom.patientName.value
+        ? dom.patientName.value.replace(/\s+/g, "_").toLowerCase()
+        : "nota-bariatrica";
+      link.download = `${filename}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function resetForm() {
+      Object.values(dom).forEach((el) => {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+          if (el.type === "date") {
+            el.value = "";
+          } else if (el === dom.bmi) {
+            el.value = "";
+          } else {
+            el.value = "";
+          }
+        }
+      });
+      dom.noteSource.value = "audio";
+      dom.bmiRange.textContent = "Sin calcular";
+      dom.log.innerHTML = "";
+      dom.interim.textContent = "";
+      state.observations = [];
+      state.procedureSet = new Set(["bypass", "manga"]);
+      state.planAbandono = "mantener";
+      document.querySelectorAll('.toggle[data-field]').forEach((toggle) => {
+        const field = toggle.dataset.field;
+        toggle.querySelectorAll("button").forEach((btn) => {
+          if (field === "cirugia-propuesta") {
+            btn.dataset.active = btn.dataset.value === "evaluar" ? "false" : "true";
+          } else if (field === "abandono-tabaco") {
+            btn.dataset.active = btn.dataset.value === "mantener" ? "true" : "false";
+          } else {
+            btn.dataset.active = btn.dataset.value === "no" ? "true" : "false";
+          }
+        });
+      });
+      updateJSON();
+    }
+
+    function downloadShortcuts(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        toggleListening();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        copyJson();
+      }
+    }
+
+    document.addEventListener("keydown", downloadShortcuts);
+
+    updateJSON();
+  </script>
+</body>
+</html>
