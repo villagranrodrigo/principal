@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notas Bariátricas — Live</title>
+  <style>
+    #nlb-root, #nlb-root * { box-sizing: border-box; }
+    #nlb-root { color: #e5e7eb; background: transparent; font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; }
+    #nlb-root .nlb-wrap{ max-width: 1300px; margin: 0 auto; padding: 16px; }
+    #nlb-root label{ color:#9aa4b2; display:block; margin:6px 0 4px; }
+    #nlb-root input, #nlb-root select, #nlb-root textarea{ width:100%; background:#0e1520; border:1px solid #1f2937; color:#e5e7eb; border-radius:10px; padding:10px; }
+    #nlb-root .nlb-grid{ display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }
+    @media (max-width:1024px){ #nlb-root .nlb-grid{ grid-template-columns:1fr; } }
+    #nlb-root .nlb-card{ background:#111827; border:1px solid #1f2937; border-radius:14px; overflow:hidden; }
+    #nlb-root .nlb-card h2{ font-size:16px; margin:0; padding:12px 14px; border-bottom:1px solid #1f2937; background:#0e1622; }
+    #nlb-root .nlb-body{ padding:14px; }
+    #nlb-root .nlb-row{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+    #nlb-root .nlb-right{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+    #nlb-root .nlb-fieldset{ border:1px solid #1f2937; border-radius:12px; padding:10px; margin:8px 0; }
+    #nlb-root .nlb-fieldset legend{ padding:0 6px; color:#9aa4b2; }
+    #nlb-root .nlb-checks{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; }
+    #nlb-root .nlb-check{ display:flex; gap:10px; align-items:center; background:#0e1520; border:1px solid #1f2937; padding:10px; border-radius:10px; }
+    #nlb-root .nlb-radio{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    #nlb-root .nlb-small{ font-size:12px; }
+    #nlb-root .nlb-muted{ color:#9aa4b2; }
+    #nlb-root .nlb-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    #nlb-root button{ appearance:none; border:none; background:#1f2937; color:#e5e7eb; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    #nlb-root button.nlb-primary{ background:#22c55e; color:#0b1215; }
+    #nlb-root button.nlb-ghost{ background:transparent; border:1px solid #1f2937; }
+    #nlb-root button.nlb-warn{ background:#f59e0b; color:#0b1215; }
+    #nlb-root .nlb-status{ display:flex; gap:12px; align-items:center; }
+    #nlb-root .nlb-dot{ width:8px; height:8px; border-radius:50%; background:#9aa4b2; }
+    #nlb-root .nlb-dot.nlb-live{ background:#22c55e; box-shadow:0 0 0 6px rgba(34,197,94,.15); }
+    #nlb-root .nlb-pill{ padding:2px 8px; border-radius:999px; border:1px solid #1f2937; background:#0f1724; color:#9aa4b2; font-size:12px; }
+    #nlb-root .nlb-imc-badge{ font-weight:600; }
+    #nlb-root .nlb-imc-ok{ color:#22c55e; }
+    #nlb-root .nlb-imc-warn{ color:#f59e0b; }
+    #nlb-root .nlb-imc-bad{ color:#ef4444; }
+    #nlb-root .nlb-transcript{ font-family:ui-monospace,Menlo,Consolas,monospace; white-space:pre-wrap; min-height:140px; background:#0b1220; border:1px dashed #1f2937; border-radius:10px; padding:10px; }
+    #nlb-root .nlb-summary{ min-height:200px; font-family:ui-monospace,Menlo,Consolas,monospace; background:#0b1220; border:1px solid #1f2937; border-radius:12px; padding:12px; white-space:pre-wrap; }
+    #nlb-root .nlb-kbd{ font:12px/1.2 ui-monospace,monospace; border:1px solid #1f2937; background:#0c1320; border-bottom-width:3px; border-radius:6px; padding:1px 6px; color:#cbd5e1 }
+    #nlb-cir-list{ list-style:none; margin:6px 0 0; padding:0; display:grid; gap:6px; }
+    #nlb-cir-list li{ display:flex; justify-content:space-between; gap:12px; background:#0b1220; border:1px solid #1f2937; border-radius:10px; padding:8px 12px; align-items:center; }
+    #nlb-cir-list button{ padding:6px 10px; }
+    #nlb-comorbidities{ display:flex; gap:8px; flex-wrap:wrap; }
+    #nlb-comorbidities .nlb-pill-toggle{ border:1px solid #1f2937; background:#0f1724; padding:6px 12px; border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+    #nlb-comorbidities .nlb-pill-toggle input{ width:auto; }
+  </style>
+</head>
+<body>
+<div id="nlb-root">
+  <div class="nlb-wrap">
+    <div class="nlb-grid">
+      <section class="nlb-card" aria-labelledby="nlb-form-title">
+        <h2 id="nlb-form-title">Ficha rápida</h2>
+        <div class="nlb-body">
+          <div class="nlb-row">
+            <div>
+              <label>Paciente</label>
+              <input id="nlb-paciente" type="text" placeholder="Nombre y apellido" autocomplete="off" />
+            </div>
+            <div>
+              <label>RUN / DNI</label>
+              <input id="nlb-run" type="text" placeholder="00.000.000-0" autocomplete="off" />
+            </div>
+            <div>
+              <label>Fecha de nacimiento</label>
+              <input id="nlb-nacimiento" type="date" />
+            </div>
+            <div>
+              <label>Edad</label>
+              <input id="nlb-edad" type="text" placeholder="Años / Meses / Días" readonly />
+            </div>
+          </div>
+          <div class="nlb-row">
+            <div>
+              <label>Fecha</label>
+              <input id="nlb-fecha" type="date" />
+            </div>
+            <div>
+              <label>Fuente del registro</label>
+              <select id="nlb-fuente">
+                <option value="audio">Audio</option>
+                <option value="videollamada">Videollamada</option>
+                <option value="presencial">Presencial</option>
+              </select>
+            </div>
+            <div>
+              <label>Alertas</label>
+              <input id="nlb-alertas" type="text" placeholder="(ej.: anticoagulantes, apnea)" />
+            </div>
+          </div>
+
+          <fieldset class="nlb-fieldset"><legend><b>Datos antropométricos</b></legend>
+            <div class="nlb-row">
+              <div>
+                <label>Peso (kg)</label>
+                <input id="nlb-peso" type="number" step="0.1" placeholder="Ej: 87" />
+              </div>
+              <div>
+                <label>Estatura (m)</label>
+                <input id="nlb-estatura" type="text" inputmode="decimal" placeholder="Ej: 1.48 o 148 cm" />
+              </div>
+              <div>
+                <div class="nlb-right">
+                  <label>IMC</label>
+                  <span id="nlb-imcClas" class="nlb-imc-badge nlb-muted">—</span>
+                </div>
+                <input id="nlb-imc" type="text" readonly />
+                <div class="nlb-small nlb-muted">IMC = peso ÷ estatura²</div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="nlb-fieldset"><legend><b>Antecedentes y comorbilidades</b></legend>
+            <div class="nlb-checks">
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-reflujo-s">Reflujo gastroesofágico sintomático</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-reflujo" id="nlb-reflujo-s" value="si"><label for="nlb-reflujo-s">Sí</label>
+                  <input type="radio" name="nlb-reflujo" id="nlb-reflujo-n" value="no"><label for="nlb-reflujo-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-med-s">Medicación actual</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-med" id="nlb-med-s" value="si"><label for="nlb-med-s">Sí</label>
+                  <input type="radio" name="nlb-med" id="nlb-med-n" value="no"><label for="nlb-med-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-fuma-s">Tabaquismo (cigarrillos)</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-fuma" id="nlb-fuma-s" value="si"><label for="nlb-fuma-s">Sí</label>
+                  <input type="radio" name="nlb-fuma" id="nlb-fuma-n" value="no"><label for="nlb-fuma-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-vapea-s">Vapeo</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-vapea" id="nlb-vapea-s" value="si"><label for="nlb-vapea-s">Sí</label>
+                  <input type="radio" name="nlb-vapea" id="nlb-vapea-n" value="no"><label for="nlb-vapea-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-cx-s">Cirugías previas</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-cx" id="nlb-cx-s" value="si"><label for="nlb-cx-s">Sí</label>
+                  <input type="radio" name="nlb-cx" id="nlb-cx-n" value="no"><label for="nlb-cx-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-eda-s">EDA (endoscopia) previa</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-eda" id="nlb-eda-s" value="si"><label for="nlb-eda-s">Sí</label>
+                  <input type="radio" name="nlb-eda" id="nlb-eda-n" value="no"><label for="nlb-eda-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-bio-s">¿Requiere revisar biopsia?</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-bio" id="nlb-bio-s" value="si"><label for="nlb-bio-s">Sí</label>
+                  <input type="radio" name="nlb-bio" id="nlb-bio-n" value="no"><label for="nlb-bio-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-famca-s">Cáncer gástrico familiar (1er grado)</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-famca" id="nlb-famca-s" value="si"><label for="nlb-famca-s">Sí</label>
+                  <input type="radio" name="nlb-famca" id="nlb-famca-n" value="no"><label for="nlb-famca-n">No</label>
+                </div></div>
+              <div class="nlb-check"><label class="nlb-muted" for="nlb-alg-s">Alergias a fármacos</label>
+                <div class="nlb-radio">
+                  <input type="radio" name="nlb-alg" id="nlb-alg-s" value="si"><label for="nlb-alg-s">Sí</label>
+                  <input type="radio" name="nlb-alg" id="nlb-alg-n" value="no"><label for="nlb-alg-n">No</label>
+                </div></div>
+            </div>
+            <label>Detalle alergias / medicamentos</label>
+            <textarea id="nlb-detalle" rows="2" placeholder="(ej.: Enalapril + HCTZ + Eutirox + metformina)"></textarea>
+            <label>Comorbilidades</label>
+            <div id="nlb-comorbidities"></div>
+          </fieldset>
+
+          <fieldset class="nlb-fieldset"><legend><b>Historial de cirugías</b></legend>
+            <div class="nlb-row">
+              <div style="flex:1">
+                <label>Descripción</label>
+                <input id="nlb-cir-desc" type="text" placeholder="(ej.: Colecistectomía laparoscópica)" />
+              </div>
+              <div>
+                <label>Fecha</label>
+                <input id="nlb-cir-fecha" type="text" placeholder="(opcional)" />
+              </div>
+              <div>
+                <button id="nlb-cir-add" class="nlb-primary" type="button">Agregar</button>
+              </div>
+            </div>
+            <ul id="nlb-cir-list"></ul>
+          </fieldset>
+
+          <fieldset class="nlb-fieldset"><legend><b>Plan</b></legend>
+            <div class="nlb-checks">
+              <div class="nlb-check">
+                <input type="checkbox" id="nlb-plan-abandono" />
+                <label for="nlb-plan-abandono">Mantener abandono tabaco</label>
+              </div>
+              <div class="nlb-check">
+                <label>Procedimiento propuesto</label>
+                <div class="nlb-radio">
+                  <input type="checkbox" id="nlb-proc-bypass" /> <label for="nlb-proc-bypass">Bypass gástrico</label>
+                  <input type="checkbox" id="nlb-proc-manga" /> <label for="nlb-proc-manga">Manga gástrica</label>
+                </div>
+              </div>
+            </div>
+            <label>Indicaciones y exámenes</label>
+            <textarea id="nlb-indicaciones" rows="2" placeholder="(ej.: Laboratorio + EDA sin biopsia + control nutricional)"></textarea>
+            <label>Próximos pasos / control</label>
+            <textarea id="nlb-proximos" rows="2" placeholder="(ej.: decidir según comité con exámenes)"></textarea>
+          </fieldset>
+
+          <div class="nlb-actions">
+            <button class="nlb-primary" id="nlb-btnCopy">Copiar JSON</button>
+            <button class="nlb-ghost" id="nlb-btnCopySummary">Copiar resumen</button>
+            <button class="nlb-ghost" id="nlb-btnDownload">Descargar JSON</button>
+            <button class="nlb-warn" id="nlb-btnReset">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="nlb-card" aria-labelledby="nlb-live-title">
+        <h2 id="nlb-live-title">Escucha en vivo</h2>
+        <div class="nlb-body">
+          <div class="nlb-row">
+            <div class="nlb-status">
+              <div id="nlb-dot" class="nlb-dot"></div>
+              <div>
+                <div id="nlb-liveStatus" class="nlb-muted">Inactivo</div>
+                <div class="nlb-small nlb-muted">Di frases como: <span class="nlb-pill">"nombre paciente ..."</span>, <span class="nlb-pill">"peso 87 kilos"</span>, <span class="nlb-pill">"run 14.548.858-3"</span>, <span class="nlb-pill">"hipotiroidismo"</span>.</div>
+              </div>
+            </div>
+            <div style="flex:1"></div>
+            <div class="nlb-row" style="align-items:center">
+              <div>
+                <label>Idioma</label>
+                <select id="nlb-lang">
+                  <option value="es-CL">Español (Chile)</option>
+                  <option value="es-ES">Español (España)</option>
+                  <option value="es-AR">Español (Argentina)</option>
+                </select>
+              </div>
+              <div class="nlb-actions">
+                <button id="nlb-btnStart" class="nlb-primary">▶︎ Escuchar</button>
+                <button id="nlb-btnStop" class="nlb-ghost">■ Detener</button>
+              </div>
+            </div>
+          </div>
+          <label>Transcripción</label>
+          <div id="nlb-transcript" class="nlb-transcript"></div>
+          <div class="nlb-small nlb-muted" style="margin-top:6px">Atajos: <span class="nlb-kbd">Ctrl/Cmd + E</span> (Escuchar/Detener), <span class="nlb-kbd">Ctrl/Cmd + J</span> (Copiar JSON), <span class="nlb-kbd">Ctrl/Cmd + Shift + C</span> (Copiar resumen).</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="nlb-card" aria-labelledby="nlb-summary-title" style="margin-top:18px;">
+      <h2 id="nlb-summary-title">Resumen estructurado</h2>
+      <div class="nlb-body">
+        <div id="nlb-summary" class="nlb-summary"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (s)=>document.querySelector(s); const byId=(id)=>document.getElementById(id);
+  const paciente=byId('nlb-paciente'), run=byId('nlb-run'), nacimiento=byId('nlb-nacimiento'), edad=byId('nlb-edad');
+  const fecha=byId('nlb-fecha'), fuente=byId('nlb-fuente'), alertas=byId('nlb-alertas');
+  const peso=byId('nlb-peso'), estatura=byId('nlb-estatura'), imc=byId('nlb-imc'), imcClas=byId('nlb-imcClas');
+  const detalle=byId('nlb-detalle'), planAbandono=byId('nlb-plan-abandono');
+  const procBypass=byId('nlb-proc-bypass'), procManga=byId('nlb-proc-manga');
+  const indic=byId('nlb-indicaciones'), prox=byId('nlb-proximos');
+  const transcriptDiv=byId('nlb-transcript'); const dot=byId('nlb-dot'); const liveStatus=byId('nlb-liveStatus');
+  const btnStart=byId('nlb-btnStart'), btnStop=byId('nlb-btnStop'), btnCopy=byId('nlb-btnCopy');
+  const btnCopySummary=byId('nlb-btnCopySummary'), btnDownload=byId('nlb-btnDownload'), btnReset=byId('nlb-btnReset');
+  const langSel=byId('nlb-lang'); const summaryBox=byId('nlb-summary');
+  const cirDesc=byId('nlb-cir-desc'), cirFecha=byId('nlb-cir-fecha'), cirAdd=byId('nlb-cir-add'), cirList=byId('nlb-cir-list');
+  const comorbContainer=byId('nlb-comorbidities');
+
+  const COMORB_OPTIONS=[
+    {id:'hta', label:'HTA / hipertensión arterial'},
+    {id:'ir', label:'IR / enfermedad renal'},
+    {id:'dm2', label:'DM2 / diabetes tipo 2'},
+    {id:'dyslipidemia', label:'Dislipidemia'},
+    {id:'osas', label:'Apnea del sueño'},
+    {id:'hipotiroidismo', label:'Hipotiroidismo'},
+    {id:'esteatosis', label:'Esteatosis hepática'},
+    {id:'otros', label:'Otros'}
+  ];
+
+  const comorbChecks={};
+  COMORB_OPTIONS.forEach(opt=>{
+    const lab=document.createElement('label');
+    lab.className='nlb-pill-toggle';
+    const input=document.createElement('input');
+    input.type='checkbox';
+    input.id='nlb-com-'+opt.id;
+    lab.appendChild(input);
+    lab.append(opt.label);
+    comorbContainer.appendChild(lab);
+    comorbChecks[opt.id]=input;
+    input.addEventListener('change', updateSummary);
+  });
+
+  fecha.value = new Date().toISOString().slice(0,10);
+
+  nacimiento.addEventListener('change', ()=>{ calcAge(); updateSummary(); });
+
+  function calcAge(){
+    const nacDate=parseDateInput(nacimiento.value);
+    if(!nacDate){ edad.value=''; return null; }
+    const refDate=parseDateInput(fecha.value)||new Date();
+    const diff=calcExactAge(nacDate, refDate);
+    const text=`${diff.years} años${typeof diff.months==='number'?`, ${diff.months} meses`:''}${typeof diff.days==='number'?`, ${diff.days} días`:''}`;
+    edad.value=text;
+    return diff;
+  }
+
+  function parseDateInput(v){ if(!v) return null; const date=new Date(v); return Number.isNaN(date.getTime())? null : date; }
+
+  function calcExactAge(from, to){
+    let years = to.getFullYear() - from.getFullYear();
+    let months = to.getMonth() - from.getMonth();
+    let days = to.getDate() - from.getDate();
+    if(days < 0){
+      const prevMonth = new Date(to.getFullYear(), to.getMonth(), 0);
+      days += prevMonth.getDate();
+      months--;
+    }
+    if(months < 0){
+      months += 12;
+      years--;
+    }
+    return {years, months, days};
+  }
+
+  function toNumber(x){ if(x===null||x===undefined) return null; const s=(''+x).replace(/\s/g,'').replace(',', '.'); const n=parseFloat(s); return Number.isFinite(n)?n:null; }
+  function estaturaMeters(v){ if(!v) return null; let s=(''+v).toLowerCase().trim(); const cm=s.match(/(\d{2,3})\s*cm/); if(cm) return parseInt(cm[1],10)/100; s=s.replace(',', '.'); const num=parseFloat(s); if(Number.isFinite(num)){ return num>3? num/100 : num; } return null; }
+  function classifyIMC(v){ let txt='', cls='nlb-imc-badge '; if(v<18.5){ txt=`Bajo peso (${v.toFixed(1)})`; cls+='nlb-imc-warn'; } else if(v<25){ txt=`Normal (${v.toFixed(1)})`; cls+='nlb-imc-ok'; } else if(v<30){ txt=`Sobrepeso (${v.toFixed(1)})`; cls+='nlb-imc-warn'; } else if(v<35){ txt=`Obesidad I (${v.toFixed(1)})`; cls+='nlb-imc-bad'; } else if(v<40){ txt=`Obesidad II (${v.toFixed(1)})`; cls+='nlb-imc-bad'; } else { txt=`Obesidad III (${v.toFixed(1)})`; cls+='nlb-imc-bad'; } imcClas.textContent=txt; imcClas.className=cls; }
+  function computeIMC(){ const p=toNumber(peso.value); const e=estaturaMeters(estatura.value); if(p && e){ const val=p/(e*e); imc.value=(Math.round(val*10)/10).toFixed(1); classifyIMC(val); } else { imc.value=''; imcClas.textContent='—'; imcClas.className='nlb-imc-badge nlb-muted'; } updateSummary(); }
+  peso.addEventListener('input', computeIMC); estatura.addEventListener('input', computeIMC); fecha.addEventListener('change', ()=>{ calcAge(); updateSummary(); });
+  paciente.addEventListener('input', updateSummary); run.addEventListener('input', updateSummary); nacimiento.addEventListener('input', updateSummary); alertas.addEventListener('input', updateSummary);
+  detalle.addEventListener('input', updateSummary); indic.addEventListener('input', updateSummary); prox.addEventListener('input', updateSummary);
+
+  const surgeries=[];
+  function addSurgery(desc, date){ const clean=(desc||'').trim(); if(!clean) return; if(surgeries.some(s=>s.desc.toLowerCase()===clean.toLowerCase() && s.fecha.toLowerCase()===(date||'').trim().toLowerCase())) return; surgeries.push({desc:clean, fecha:(date||'').trim()}); renderSurgeries(); updateSummary(); }
+  function removeSurgery(idx){ surgeries.splice(idx,1); renderSurgeries(); updateSummary(); }
+  function renderSurgeries(){ cirList.innerHTML=''; if(surgeries.length===0){ const empty=document.createElement('li'); empty.textContent='Sin cirugías registradas'; empty.style.justifyContent='center'; empty.style.fontStyle='italic'; empty.style.color='#9aa4b2'; empty.style.padding='12px'; empty.style.background='transparent'; empty.style.border='1px dashed #1f2937'; empty.style.borderRadius='10px'; cirList.appendChild(empty); return; }
+    surgeries.forEach((item, idx)=>{
+      const li=document.createElement('li');
+      const span=document.createElement('span');
+      span.textContent=item.fecha? `${item.desc} — ${item.fecha}`: item.desc;
+      const btn=document.createElement('button');
+      btn.textContent='Eliminar';
+      btn.className='nlb-ghost';
+      btn.type='button';
+      btn.addEventListener('click', ()=> removeSurgery(idx));
+      li.appendChild(span);
+      li.appendChild(btn);
+      cirList.appendChild(li);
+    });
+  }
+  renderSurgeries();
+
+  cirAdd.addEventListener('click', ()=>{ addSurgery(cirDesc.value, cirFecha.value); cirDesc.value=''; cirFecha.value=''; cirDesc.focus(); });
+
+  function getRadio(name){ const yes=byId(`nlb-${name}-s`); const no=byId(`nlb-${name}-n`); if(yes.checked) return true; if(no.checked) return false; return null; }
+  function setRadio(name, value){ const id = value? `nlb-${name}-s` : `nlb-${name}-n`; const el=byId(id); if(el){ el.checked=true; pulse(el.closest('.nlb-check')); updateSummary(); } }
+  function pulse(node){ if(!node) return; node.style.outline='2px solid #22c55e55'; setTimeout(()=> node.style.outline='none', 700); }
+
+  let transcriptStore=[];
+  function addLine(text, interim=false){ const ts=new Date().toTimeString().slice(0,8); if(interim){ const last=transcriptDiv.querySelector('.nlb-interim'); if(last){ last.innerHTML = `<span class="nlb-pill">[${ts}]</span> ${esc(text)} (… )`; } else { const div=document.createElement('div'); div.className='nlb-interim nlb-muted'; div.innerHTML = `<span class="nlb-pill">[${ts}]</span> ${esc(text)} (… )`; transcriptDiv.appendChild(div);} transcriptDiv.scrollTop=transcriptDiv.scrollHeight; return; } const last=transcriptDiv.querySelector('.nlb-interim'); if(last) last.remove(); const line=document.createElement('div'); line.innerHTML = `<span class="nlb-pill">[${ts}]</span> ${esc(text)}`; transcriptDiv.appendChild(line); transcriptDiv.scrollTop=transcriptDiv.scrollHeight; transcriptStore.push({ts,text}); updateSummary(); }
+  function esc(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  function toJSON(){
+    const comorbs=Object.entries(comorbChecks).filter(([,el])=>el.checked).map(([key])=>key);
+    return {
+      paciente: paciente.value||'',
+      run: run.value||'',
+      fecha_nacimiento: nacimiento.value||'',
+      edad: edad.value||'',
+      fecha: fecha.value||'',
+      fuente: fuente.value,
+      alertas: alertas.value||'',
+      datos:{ peso_kg: toNumber(peso.value), estatura_m: estaturaMeters(estatura.value), imc: imc.value? toNumber(imc.value): null },
+      antecedentes:{
+        comorbilidades: comorbs,
+        reflujo_sintomatico: getRadio('reflujo'),
+        medicacion_actual: getRadio('med'),
+        tabaquismo: getRadio('fuma'),
+        vapeo: getRadio('vapea'),
+        cirugias_previas: getRadio('cx'),
+        eda_previa: getRadio('eda'),
+        requiere_revisar_biopsia: getRadio('bio'),
+        cancer_gastrico_familiar_primer_grado: getRadio('famca'),
+        alergias_farmacos: getRadio('alg'),
+        detalle_alergias_meds: detalle.value||''
+      },
+      cirugias: surgeries.slice(),
+      plan:{
+        abandono_tabaco: planAbandono.checked? 'mantener':'no_indicado',
+        procedimiento_propuesto:[...(procBypass.checked?['bypass_gastrico']:[]), ...(procManga.checked?['manga_gastrica']:[])],
+        indicaciones: indic.value||'',
+        proximos_pasos: prox.value||''
+      },
+      observaciones: transcriptStore.map(x=>({timestamp:x.ts,texto:x.text}))
+    };
+  }
+
+  function updateSummary(){
+    const data=toJSON();
+    const pesoTxt=data.datos.peso_kg!=null? `${data.datos.peso_kg.toFixed(1).replace('.',',')} kg`:'—';
+    const estTxt=data.datos.estatura_m!=null? `${data.datos.estatura_m.toFixed(2).replace('.',',')} m`:'—';
+    const imcTxt=data.datos.imc!=null? `${data.datos.imc.toFixed(2).replace('.',',')}`:'—';
+    const edadTxt=data.edad? data.edad:'—';
+    const nacTxt=data.fecha_nacimiento? formatDateHuman(data.fecha_nacimiento):'—';
+    const comorbTxt=data.antecedentes.comorbilidades.length? data.antecedentes.comorbilidades.join(', ').toUpperCase():'--';
+    const cirTxt=data.cirugias.length? data.cirugias.map(c=>`- ${c.desc}${c.fecha?` (${c.fecha})`:''}`).join('\n'):'--';
+    const meds=detalle.value? detalle.value:'--';
+    const planLines=[];
+    if(procBypass.checked || procManga.checked){
+      const opts=[]; if(procBypass.checked) opts.push('Bypass gástrico'); if(procManga.checked) opts.push('Manga gástrica'); planLines.push(opts.join(' / '));
+    }
+    if(planAbandono.checked) planLines.push('Mantener abandono tabaco');
+    if(indic.value) planLines.push(indic.value);
+    if(prox.value) planLines.push(prox.value);
+
+    summaryBox.textContent = `Nombre: ${data.paciente || '--'}\nRUN/DNI: ${data.run || '--'}\nEdad: ${edadTxt}.\nFecha de nacimiento: ${nacTxt}\nPeso: ${pesoTxt}\nEstatura: ${estTxt}\nIMC: ${imcTxt}\nAlertas: ${data.alertas || '--'}\n\nHistorial de cirugías:\n${cirTxt}\n\nComorbilidades: ${comorbTxt}\n\nReflujo gastroesofágico sintomático: ${formatRadio(data.antecedentes.reflujo_sintomatico)}\nMedicación actual: ${formatRadio(data.antecedentes.medicacion_actual)}\nTabaquismo: ${formatRadio(data.antecedentes.tabaquismo)}\nVapeo: ${formatRadio(data.antecedentes.vapeo)}\nEDA previa: ${formatRadio(data.antecedentes.eda_previa)}\n¿Requiere revisar biopsia?: ${formatRadio(data.antecedentes.requiere_revisar_biopsia)}\nCáncer gástrico familiar 1er grado: ${formatRadio(data.antecedentes.cancer_gastrico_familiar_primer_grado)}\nAlergias a fármacos: ${formatRadio(data.antecedentes.alergias_farmacos)}\nMedicamentos / detalle: ${meds}\n\nPlan:\n${planLines.length? planLines.map(l=>`- ${l}`).join('\n'):'--'}`;
+  }
+
+  function formatDateHuman(value){ if(!value) return '--'; const date=new Date(value); if(Number.isNaN(date.getTime())) return value; const day=String(date.getDate()).padStart(2,'0'); const month=String(date.getMonth()+1).padStart(2,'0'); const year=date.getFullYear(); return `${day}/${month}/${year}`; }
+  function formatRadio(val){ if(val===true) return 'Sí'; if(val===false) return 'No'; return '--'; }
+
+  function copyJSON(){ const s=JSON.stringify(toJSON(),null,2); navigator.clipboard?.writeText(s).then(()=> toast('JSON copiado')).catch(()=> alert('No se pudo copiar.')); }
+  function copySummary(){ const s=summaryBox.textContent; navigator.clipboard?.writeText(s).then(()=> toast('Resumen copiado')).catch(()=> alert('No se pudo copiar.')); }
+  function downloadJSON(){ const blob=new Blob([JSON.stringify(toJSON(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`nota_bariatrica_${(new Date()).toISOString().slice(0,10)}.json`; a.click(); }
+
+  btnCopy.addEventListener('click', (e)=>{e.preventDefault(); copyJSON();});
+  btnCopySummary.addEventListener('click', (e)=>{e.preventDefault(); copySummary();});
+  btnDownload.addEventListener('click', (e)=>{e.preventDefault(); downloadJSON();});
+  btnReset.addEventListener('click', (e)=>{e.preventDefault(); if(confirm('¿Vaciar todos los campos?')) location.reload();});
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; let rec=null; let active=false;
+  function setLive(on){ active=on; const cls=dot.classList; if(on){ cls.add('nlb-live'); liveStatus.textContent='Escuchando…'; } else { cls.remove('nlb-live'); liveStatus.textContent='Inactivo'; } }
+  function startRec(){ if(!SpeechRecognition){ alert('Tu navegador no soporta reconocimiento de voz (Web Speech API). Usa Chrome.'); return; } if(rec){ try{rec.stop();}catch(e){} rec=null; }
+    rec=new SpeechRecognition(); rec.lang=langSel.value||'es-CL'; rec.interimResults=true; rec.continuous=true;
+    rec.onresult=(ev)=>{ let interim=''; for(let i=ev.resultIndex;i<ev.results.length;i++){ const r=ev.results[i]; const t=r[0].transcript.trim(); if(r.isFinal){ addLine(t); parseEntities(t); } else { interim=t; } }
+      if(interim) addLine(interim,true);
+    };
+    rec.onerror=(e)=>{ addLine('[error] '+(e.error||'desconocido')); toast('Error de reconocimiento'); setLive(false); };
+    rec.onend=()=> setLive(false);
+    try{ rec.start(); setLive(true);}catch(err){console.error(err);} }
+  function stopRec(){ if(rec){ try{rec.stop();}catch(e){} } setLive(false); }
+  btnStart.addEventListener('click', (e)=>{e.preventDefault(); startRec();});
+  btnStop.addEventListener('click', (e)=>{e.preventDefault(); stopRec();});
+  document.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='e'){ e.preventDefault(); active? stopRec(): startRec(); }
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='j'){ e.preventDefault(); copyJSON(); }
+    if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='c'){ e.preventDefault(); copySummary(); }
+  });
+
+  function sanitizeText(str){ return str.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase(); }
+
+  const yesWords=['si','sí','afirmativo','correcto','presenta','tiene'];
+  const noWords=['no','sin','niega','ausente','negativo'];
+
+  function parseEntities(raw){
+    const normalized = sanitizeText(raw);
+
+    detectNombre(raw, normalized);
+    detectRun(raw, normalized);
+    detectFechaNacimiento(raw, normalized);
+    detectEdad(raw, normalized);
+    detectPeso(normalized);
+    detectEstatura(normalized);
+    detectIMC(raw, normalized);
+    detectReflujo(normalized);
+    detectMedicacion(raw, normalized);
+    detectTabaquismo(normalized);
+    detectVapeo(normalized);
+    detectCirugias(normalized, raw);
+    detectEDA(normalized);
+    detectBiopsia(normalized);
+    detectCancerFamiliar(normalized);
+    detectAlergias(raw, normalized);
+    detectComorbilidades(normalized);
+    detectMedicamentosLista(raw);
+    detectPlan(normalized, raw);
+
+    computeIMC();
+    calcAge();
+    updateSummary();
+  }
+
+  function detectNombre(raw, normalized){
+    if(paciente.value) return;
+    const match=raw.match(/(?:paciente|nombre|soy|se llama)\s+([A-ZÁÉÍÓÚÜÑ][A-Za-zÁÉÍÓÚÜÑñ'\s]{3,})/i);
+    if(match){ const name=match[1].replace(/[\.,]$/,'').trim(); if(name){ paciente.value=titleCase(name); pulse(paciente.closest('div')); }}
+  }
+
+  function detectRun(raw, normalized){
+    const match=normalized.match(/(?:run|rut|dni|identificacion)\s*([0-9\.\-kK]+)/);
+    if(match){ const value=match[1].replace(/\s/g,'').toUpperCase(); run.value=formatRUN(value); pulse(run.closest('div')); }
+  }
+
+  function formatRUN(value){ let clean=value.replace(/[^0-9kK]/g,''); if(clean.length<=1) return value; const body=clean.slice(0,-1); const dv=clean.slice(-1); return body.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+dv.toUpperCase(); }
+
+  function detectFechaNacimiento(raw, normalized){
+    const matchSlash=raw.match(/(\d{1,2})[\/](\d{1,2})[\/](\d{2,4})/);
+    if(matchSlash){ const [ , d,m,y]=matchSlash; nacimiento.value=formatDateIso(d,m,y); pulse(nacimiento.closest('div')); return; }
+    const matchText=normalized.match(/(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})/);
+    if(matchText){ const day=parseInt(matchText[1],10); const month=monthToNumber(matchText[2]); const year=parseInt(matchText[3],10); nacimiento.value=formatDateIso(day,month,year); pulse(nacimiento.closest('div')); }
+  }
+
+  function detectEdad(raw, normalized){
+    const match=normalized.match(/(\d{1,2})\s*anos?(?:\s*(\d{1,2})\s*mes(?:es)?)?(?:\s*(\d{1,2})\s*dias?)?/);
+    if(match){ const fragment=raw.substring(match.index, match.index+match[0].length).replace(/anos/gi,'años'); edad.value=fragment.trim(); }
+  }
+
+  function detectPeso(normalized){
+    let m=normalized.match(/(?:peso\s*(?:de)?|pesa)\s*(\d+[\.,]?\d*)/);
+    if(!m){ m=normalized.match(/(\d+[\.,]?\d*)\s*(?:kilo|kilos|kg)/); }
+    if(m){ peso.value=m[1].replace(',', '.'); computeIMC(); pulse(peso.closest('div')); }
+  }
+
+  function detectEstatura(normalized){
+    let m=normalized.match(/(?:estatura|talla|mide|altura)\s*(\d+[\.,]?\d*)/);
+    if(m){ estatura.value=m[1].replace(',', '.'); pulse(estatura.closest('div')); }
+    const cm=normalized.match(/(\d{3})\s*cm/);
+    if(cm){ estatura.value=`${cm[1]} cm`; pulse(estatura.closest('div')); }
+    const metros=normalized.match(/(\d)\s*metros?\s*(\d{1,2})?\s*centimetros?/);
+    if(metros){ const meters=parseInt(metros[1],10); const cmPart=metros[2]? parseInt(metros[2],10):0; estatura.value=(meters + cmPart/100).toFixed(2); pulse(estatura.closest('div')); }
+  }
+
+  function detectIMC(raw, normalized){
+    const match=normalized.match(/imc\s*(\d+[\.,]?\d*)/);
+    if(match){ const val=parseFloat(match[1].replace(',', '.')); if(Number.isFinite(val)){ imc.value=val.toFixed(1); classifyIMC(val); }}
+  }
+
+  function detectReflujo(normalized){
+    if(!normalized.includes('reflujo')) return;
+    if(matchNeg('reflujo', normalized)) setRadio('reflujo', false);
+    else if(matchAffirm('reflujo', normalized)) setRadio('reflujo', true);
+  }
+
+  function detectMedicacion(raw, normalized){
+    if(!normalized.includes('medic')) return;
+    if(matchNeg('medicacion', normalized) || /no\s+toma\s+medicamentos?/.test(normalized)) setRadio('med', false);
+    else if(matchAffirm('medicacion', normalized) || /toma\s+/.test(normalized) || /medicados?/.test(normalized)) setRadio('med', true);
+  }
+
+  function detectTabaquismo(normalized){
+    if(!/(fuma|fumador|fumadora|tabaquismo|tabaco)/.test(normalized)) return;
+    if(/\b(no|nunca)\s+(?:fuma|fumo|fumado|fumadora|fumador|tabaquista)/.test(normalized) || /abandono\s+tabaco/.test(normalized) || /dejo\s+de\s+fumar/.test(normalized)) { setRadio('fuma', false); return; }
+    if(/\b(yo|ella|el|paciente|luisa|el\s+paciente|la\s+paciente)\s+(?:es\s+)?(?:fumador|fumadora|fuma)\b/.test(normalized) || /tabaquista\b/.test(normalized) || /fuma\s+(si|sí)/.test(normalized) || /(si|sí)\s+fuma/.test(normalized)) { setRadio('fuma', true); }
+  }
+
+  function detectVapeo(normalized){
+    if(!normalized.includes('vape')) return;
+    if(matchNeg('vape', normalized)) setRadio('vapea', false);
+    else if(matchAffirm('vape', normalized)) setRadio('vapea', true);
+  }
+
+  function detectCirugias(normalized, raw){
+    if(!/(cirug|operaci|operado|cole|cesarea|cesárea)/.test(normalized)) return;
+    if(/sin\s+cirug/.test(normalized) || /no\s+cirug/.test(normalized)) { setRadio('cx', false); return; }
+    setRadio('cx', true);
+    const matches=new Set();
+    const patterns=[
+      /(cole[ck]?[ao][^\.,;]*)/gi,
+      /(cesarea\s*x?\s*\d+)/gi,
+      /(cesárea\s*x?\s*\d+)/gi,
+      /(laparo[sc]opia[^\.,;]*)/gi,
+      /(bypass|manga|gastrectomi[ao]|hernia|apendicectomia|sleeve)/gi
+    ];
+    patterns.forEach(regex=>{
+      let r; while((r=regex.exec(raw))!==null){ const desc=r[0].trim(); if(desc) matches.add(desc); }
+    });
+    matches.forEach(desc=> addSurgery(desc));
+  }
+
+  function detectEDA(normalized){
+    if(!/(eda|endoscop)/.test(normalized)) return;
+    if(matchNeg('eda', normalized) || /no\s+endoscop/.test(normalized)) setRadio('eda', false);
+    else if(matchAffirm('eda', normalized)) setRadio('eda', true);
+  }
+
+  function detectBiopsia(normalized){
+    if(!normalized.includes('biops')) return;
+    if(/no\s+(?:hay|tiene|requiere)\s+biops/.test(normalized)) setRadio('bio', false);
+    else if(/revisar\s+biops/.test(normalized) || /requiere\s+revisar\s+biops/.test(normalized)) setRadio('bio', true);
+  }
+
+  function detectCancerFamiliar(normalized){
+    if(!(normalized.includes('cancer') && normalized.includes('gastric'))) return;
+    if(matchNeg('cancer', normalized) || /niega\s+cancer\s+gastric/.test(normalized)) setRadio('famca', false);
+    else if(matchAffirm('cancer', normalized)) setRadio('famca', true);
+  }
+
+  function detectAlergias(raw, normalized){
+    if(!normalized.includes('alerg')) return;
+    if(matchNeg('alerg', normalized)) { setRadio('alg', false); return; }
+    setRadio('alg', true);
+    if(detalle.value.toLowerCase().includes(normalized)) return;
+    detalle.value = detalle.value? `${detalle.value}; ${raw.trim()}`: raw.trim();
+  }
+
+  function detectComorbilidades(normalized){
+    const map=[
+      {keywords:['hta','hipertension','hipertension arterial'], id:'hta'},
+      {keywords:['insuficiencia renal','enfermedad renal','ir cronica','ir crónica','ir'], id:'ir'},
+      {keywords:['diabetes','dm2','metformina'], id:'dm2'},
+      {keywords:['dislipidemia','colesterol'], id:'dyslipidemia'},
+      {keywords:['apnea','ronca','osas'], id:'osas'},
+      {keywords:['hipotiroid','eutirox'], id:'hipotiroidismo'},
+      {keywords:['esteatosis'], id:'esteatosis'}
+    ];
+    map.forEach(item=>{
+      if(item.keywords.some(k=> normalized.includes(k))){ const checkbox=comorbChecks[item.id]; if(checkbox){ checkbox.checked=true; pulse(checkbox.parentElement); }}
+    });
+  }
+
+  function detectMedicamentosLista(raw){
+    const meds=['enalapril','hctz','eutirox','metformina','mtf'];
+    meds.forEach(med=>{
+      const regex=new RegExp(`\\b${med}\\b`, 'i');
+      if(regex.test(raw) && !detalle.value.toLowerCase().includes(med.toLowerCase())){
+        detalle.value = detalle.value? `${detalle.value}, ${med}`: med;
+        setRadio('med', true);
+      }
+    });
+  }
+
+  function detectPlan(normalized, raw){
+    if(/mantener\s+abandono\s+tabaco/.test(normalized)) planAbandono.checked=true;
+    if(/bypass/.test(normalized)) procBypass.checked=true;
+    if(/manga/.test(normalized)) procManga.checked=true;
+    if(/no\s+tiene\s+preferenc/.test(normalized) && !prox.value.toLowerCase().includes('preferenc')) prox.value = prox.value? `${prox.value}\nSin preferencias por técnica.` : 'Sin preferencias por técnica.';
+    if(/decidir\s+con\s+examen/.test(normalized) && !indic.value.toLowerCase().includes('examen')) indic.value = indic.value? `${indic.value}\nDecidir con exámenes.` : 'Decidir con exámenes.';
+  }
+
+  function matchNeg(term, text){ const reg=new RegExp(`(?:${noWords.join('|')})(?:\\s+\\w+){0,3}?\\s+${term}`); const regTail=new RegExp(`${term}(?:\\s+\\w+){0,3}?(?:${noWords.join('|')})`); return reg.test(text) || regTail.test(text); }
+  function matchAffirm(term, text){ const reg=new RegExp(`(?:${yesWords.join('|')})(?:\\s+\\w+){0,3}?\\s+${term}`); const regTail=new RegExp(`${term}(?:\\s+\\w+){0,3}?(?:${yesWords.join('|')})`); return reg.test(text) || regTail.test(text); }
+
+  function formatDateIso(d,m,y){ const day=String(parseInt(d,10)).padStart(2,'0'); const month=String(parseInt(m,10)).padStart(2,'0'); const year=parseInt(y,10)<100? String(2000+parseInt(y,10)) : String(parseInt(y,10)); return `${year}-${month}-${day}`; }
+  function monthToNumber(name){ const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','setiembre','octubre','noviembre','diciembre']; const idx=months.indexOf(name); return idx>=0? idx+1 : 1; }
+  function titleCase(str){ return str.replace(/\w[^\s-]*/g, w=> w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()); }
+
+  function toast(msg){ let t=document.getElementById('nlb-toast'); if(!t){ t=document.createElement('div'); t.id='nlb-toast'; t.style.position='fixed'; t.style.bottom='16px'; t.style.right='16px'; t.style.background='#111827'; t.style.border='1px solid #1f2937'; t.style.padding='10px 14px'; t.style.borderRadius='10px'; t.style.boxShadow='0 6px 20px rgba(0,0,0,.35)'; t.style.zIndex=9999; t.style.color='#e5e7eb'; document.body.appendChild(t); }
+    t.textContent=msg; t.style.opacity='1'; clearTimeout(toast.timer); toast.timer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
+  }
+
+  updateSummary();
+})();
+</script>
+</body>
+</html>
