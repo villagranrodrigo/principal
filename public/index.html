@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registro de Entrevistas | Clinyco</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Registro de entrevistas Clinyco</h1>
+      <p class="subtitle">
+        Completa la información de la entrevista y descarga un archivo de texto
+        con el resumen automáticamente.
+      </p>
+    </header>
+
+    <main class="app">
+      <section class="card">
+        <h2>Datos de la entrevista</h2>
+        <form id="interview-form" class="form-grid">
+          <label class="field">
+            <span>Nombre del paciente</span>
+            <input type="text" name="paciente" required placeholder="Ej: Juan Pérez" />
+          </label>
+
+          <label class="field">
+            <span>Profesional</span>
+            <input type="text" name="profesional" required placeholder="Ej: Dra. Soto" />
+          </label>
+
+          <label class="field">
+            <span>Fecha</span>
+            <input type="date" name="fecha" required />
+          </label>
+
+          <label class="field">
+            <span>Tipo de entrevista</span>
+            <input type="text" name="tipo" placeholder="Evaluación inicial, control, etc." />
+          </label>
+
+          <label class="field field--full">
+            <span>Motivo de consulta</span>
+            <textarea
+              name="motivo"
+              rows="3"
+              placeholder="Describe brevemente el motivo de la entrevista"
+            ></textarea>
+          </label>
+
+          <label class="field field--full">
+            <span>Resumen / Hallazgos principales</span>
+            <textarea
+              name="resumen"
+              rows="6"
+              placeholder="Redacta los puntos más importantes que se conversaron"
+              required
+            ></textarea>
+          </label>
+
+          <label class="field field--full">
+            <span>Próximos pasos</span>
+            <textarea
+              name="proximos"
+              rows="3"
+              placeholder="Indica tareas, derivaciones o próximos controles"
+            ></textarea>
+          </label>
+
+          <div class="form-actions">
+            <button type="button" id="clear-btn" class="btn btn-secondary">Limpiar</button>
+            <button type="submit" class="btn btn-primary">Generar archivo</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Vista previa del archivo</h2>
+          <div class="preview-actions">
+            <button id="copy-btn" class="btn btn-secondary" type="button">Copiar texto</button>
+            <a id="download-btn" class="btn btn-primary" href="#" download>Descargar TXT</a>
+          </div>
+        </div>
+        <textarea id="preview" class="preview" readonly placeholder="La vista previa aparecerá aquí..."></textarea>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Hecho con ❤️ para el equipo de <strong>Clinyco</strong>. Este archivo se genera
+        completamente en tu navegador, sin enviar datos a servidores externos.
+      </p>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
