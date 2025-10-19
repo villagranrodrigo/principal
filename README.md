@@ -82,3 +82,21 @@ python -m patient_tracking flujo
 ```
 
 Los mensajes se almacenan en `data/patients.json`, que puede respaldarse o compartirse con el equipo clínico según sea necesario.
+
+## Aplicación web Clynico
+
+En el directorio `clynico_app/` encontrarás una aplicación web creada con Vite + React + TypeScript preparada para desplegarse en Firebase Hosting. Incluye:
+
+- Configuración inicial de Firebase (`firebase.json`, reglas e índices de Firestore).
+- Un cliente que consume Firestore para listar pacientes, marcar etapas y enviar mensajes.
+- Hook reutilizable `usePatients` para gestionar el estado compartido.
+- Componentes base listos para personalizar con la identidad visual de Clynico.
+
+Para comenzar:
+
+1. Copia `.env.example` a `.env` y añade las credenciales de tu proyecto Firebase y la clave pública de App Check.
+2. Instala dependencias con `npm install` dentro de `clynico_app/`.
+3. Ejecuta `npm run dev` para desarrollar localmente y `npm run build` para generar la versión de producción.
+4. Implementa autenticación y funciones de mensajería según los requerimientos del flujo clínico.
+
+Consulta `clynico_app/README.md` para instrucciones detalladas de configuración y despliegue.

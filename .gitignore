@@ -14,3 +14,7 @@ coverage/
 
 # Datos generados por la aplicación
 /data/
+
+# Dependencias del frontend
+clynico_app/node_modules/
+clynico_app/dist/
