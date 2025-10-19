@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.venv/
+.env.local
+.mypy_cache/
+.pytest_cache/
+coverage/
+.cache/
+*.sqlite3
+
+# Datos generados por la aplicación
+/data/
